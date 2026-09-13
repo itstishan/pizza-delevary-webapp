@@ -28,5 +28,4 @@ export const authAction = authSlice.actions
 
 export default authSlice.reducer;
 
-// store is composed of several slices, 
-// each slice contain specific login (auth slice for auth)
+// the store is composed of several slices, each owning one piece of state (this one owns auth)

@@ -1,10 +1,15 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Container, Row, Col } from "reactstrap";
+import { useNavigate, Navigate } from "react-router-dom";
 import CommonSection from "../components/UI/common-section/CommonSection";
 import Helmet from "../components/Helmet/Helmet";
+import { cartActions } from "../store/shopping-cart/cartSlice";
+import { API_URL } from "../config/api";
 
 import "../styles/checkout.css";
+
+const SHIPPING_COST = 30;
 
 const Checkout = () => {
   const [enterName, setEnterName] = useState("");
@@ -13,26 +18,62 @@ const Checkout = () => {
   const [enterCountry, setEnterCountry] = useState("");
   const [enterCity, setEnterCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const shippingInfo = [];
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const cartItems = useSelector((state) => state.cart.cartItems);
   const cartTotalAmount = useSelector((state) => state.cart.totalAmount);
-  const shippingCost = 30;
+  const totalAmount = cartTotalAmount + SHIPPING_COST;
 
-  const totalAmount = cartTotalAmount + Number(shippingCost);
+  // an empty cart used to still show a $30 total and a working "Payment" button - block it from reaching checkout at all
+  if (cartItems.length === 0) {
+    return <Navigate to="/cart" replace />;
+  }
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    const userShippingAddress = {
-      name: enterName,
-      email: enterEmail,
-      phone: enterNumber,
-      country: enterCountry,
-      city: enterCity,
-      postalCode: postalCode,
-    };
+    setError("");
+    setSubmitting(true);
 
-    shippingInfo.push(userShippingAddress);
-    console.log(shippingInfo);
+    try {
+      const res = await fetch(`${API_URL}/order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cartItems.map((item) => ({
+            productId: item.id,
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          shippingAddress: {
+            name: enterName,
+            email: enterEmail,
+            phone: enterNumber,
+            country: enterCountry,
+            city: enterCity,
+            postalCode,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.msg || "Failed to place order");
+      }
+
+      const order = await res.json();
+      dispatch(cartActions.clearCart());
+      alert(`Order placed! Your order id is ${order._id}`);
+      navigate("/home");
+    } catch (err) {
+      setError(err.message || "Something went wrong placing your order");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -43,6 +84,7 @@ const Checkout = () => {
           <Row>
             <Col lg="8" md="6">
               <h6 className="mb-4">Shipping Address</h6>
+              {error && <p className="text-danger">{error}</p>}
               <form className="checkout__form" onSubmit={submitHandler}>
                 <div className="form__group">
                   <input
@@ -93,8 +135,8 @@ const Checkout = () => {
                     onChange={(e) => setPostalCode(e.target.value)}
                   />
                 </div>
-                <button type="submit" className="addTOCart__btn">
-                  Payment
+                <button type="submit" className="addTOCart__btn" disabled={submitting}>
+                  {submitting ? "Placing order..." : "Payment"}
                 </button>
               </form>
             </Col>
@@ -105,7 +147,7 @@ const Checkout = () => {
                   Subtotal: <span>${cartTotalAmount}</span>
                 </h6>
                 <h6 className="d-flex align-items-center justify-content-between mb-3">
-                  Shipping: <span>${shippingCost}</span>
+                  Shipping: <span>${SHIPPING_COST}</span>
                 </h6>
                 <div className="checkout__total">
                   <h5 className="d-flex align-items-center justify-content-between">

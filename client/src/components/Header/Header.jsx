@@ -49,10 +49,8 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  //const isLogged = user !== null && Object.keys(user).length !== 0;
-   const isLogged = false;
-  //const isLogAdim = user !== null && user.isAdmin === true;
-   const isLogAdim = false
+  const isLogged = user !== null && user !== undefined;
+  const isLogAdim = isLogged && user.isAdmin === true;
 
   const toggleMenu = () => menuRef.current.classList.toggle("show__menu");
 
@@ -122,7 +120,7 @@ const Header = () => {
           {/* ======== nav right icons ========= */}
           <div className="nav__right d-flex align-items-center gap-4">
             <span className="cart__icon" onClick={toggleCart}>
-              <i class="ri-shopping-basket-line"></i>
+              <i className="ri-shopping-basket-line"></i>
               <span className="cart__badge">{totalQuantity}</span>
             </span>
 
@@ -145,7 +143,7 @@ const Header = () => {
             )}
 
             <span className="mobile__menu" onClick={toggleMenu}>
-              <i class="ri-menu-line"></i>
+              <i className="ri-menu-line"></i>
             </span>
           </div>
         </div>

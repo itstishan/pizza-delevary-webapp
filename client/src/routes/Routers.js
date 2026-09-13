@@ -11,6 +11,7 @@ import Contact from "../pages/Contact";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import UpdateFood from "../pages/UpdateFood";
+import RequireAdmin from "./RequireAdmin";
 
 const Routers = () => {
   return (
@@ -24,8 +25,22 @@ const Routers = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/contact" element={<Contact />} />
-      <Route path="/addfoods" element={<AddFoods />} />
-      <Route path="/updatefoods/:id" element={<UpdateFood />} />
+      <Route
+        path="/addfoods"
+        element={
+          <RequireAdmin>
+            <AddFoods />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/updatefoods/:id"
+        element={
+          <RequireAdmin>
+            <UpdateFood />
+          </RequireAdmin>
+        }
+      />
     </Routes>
   );
 };

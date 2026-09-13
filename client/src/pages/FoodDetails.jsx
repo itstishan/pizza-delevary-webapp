@@ -7,6 +7,7 @@ import { Container, Row, Col } from "reactstrap";
 
 import { useDispatch } from "react-redux";
 import { cartActions } from "../store/shopping-cart/cartSlice";
+import { API_URL } from "../config/api";
 
 import "../styles/product-details.css";
 
@@ -16,86 +17,145 @@ const FoodDetails = () => {
   const [enteredName, setEnteredName] = useState("");
   const [enteredEmail, setEnteredEmail] = useState("");
   const [reviewMsg, setReviewMsg] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
   const { id } = useParams();
   const dispatch = useDispatch();
 
-  const [product, setFilteredFoods] = useState("");
+  // starts null (not "") so we can tell "still loading" from "not found" before the fetch resolves
+  const [product, setProduct] = useState(null);
+  const [notFound, setNotFound] = useState(false);
+  const [previewImg, setPreviewImg] = useState("");
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     const fetchFoodType = async () => {
-      const res = await fetch(`http://localhost:5000/product/find/${id}`);
-
-      const data = await res.json();
-      setFilteredFoods(data);
+      try {
+        const res = await fetch(`${API_URL}/product/find/${id}`);
+        if (!res.ok) {
+          setNotFound(true);
+          return;
+        }
+        const data = await res.json();
+        setProduct(data);
+        setPreviewImg(data.img);
+      } catch (error) {
+        console.error(error);
+        setNotFound(true);
+      }
     }
     fetchFoodType();
-  },[]);
+  }, [id]);
 
-  const [previewImg, setPreviewImg] = useState(product.img);
-
-  const title = product.title;
-  const price = product.price;
-  const img = product.img;
-
-  const addItem = () => {
-    dispatch(
-      cartActions.addItem({
-        id,
-        title,
-        price,
-        img,
-      })
-    );
-  };
-
-  const submitHandler = (e) => {
-    e.preventDefault();
-
-    console.log(enteredName, enteredEmail, reviewMsg);
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch(`${API_URL}/review/${id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setReviews(data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
-    setPreviewImg(product.img);
-  }, [product]);
+    fetchReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [product]);
 
+  const addItem = () => {
+    if (!product) return;
+    dispatch(
+      cartActions.addItem({
+        id,
+        title: product.title,
+        price: product.price,
+        img: product.img,
+      })
+    );
+  };
+
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    setSubmittingReview(true);
+
+    try {
+      const res = await fetch(`${API_URL}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: id,
+          name: enteredName,
+          email: enteredEmail,
+          message: reviewMsg,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.msg || "Failed to submit review");
+      }
+
+      setEnteredName("");
+      setEnteredEmail("");
+      setReviewMsg("");
+      await fetchReviews();
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  if (notFound) {
+    return (
+      <Helmet title="Product-details">
+        <CommonSection title="Product not found" />
+      </Helmet>
+    );
+  }
+
+  if (!product) {
+    return (
+      <Helmet title="Product-details">
+        <CommonSection title="Loading..." />
+      </Helmet>
+    );
+  }
+
+  // cover image plus gallery images, deduplicated in case an admin re-used the cover image in the gallery too
+  const gallery = [product.img, ...(product.images || [])].filter(
+    (img, index, all) => img && all.indexOf(img) === index
+  );
+
   return (
     <Helmet title="Product-details">
-      <CommonSection title={title} />
+      <CommonSection title={product.title} />
 
       <section>
         <Container>
           <Row>
             <Col lg="2" md="2">
               <div className="product__images ">
-                <div
-                  className="img__item mb-3"
-                  onClick={() => setPreviewImg(product.img)}
-                >
-                  <img src={`http://localhost:5000/images/${product.img}`} alt="" className="w-50" />
-                </div>
-                <div
-                  className="img__item mb-3"
-                  onClick={() => setPreviewImg(product.image01)}
-                >
-                  <img src={`http://localhost:5000/images/${product.img}`} alt="" className="w-50" />
-                </div>
-
-                <div
-                  className="img__item"
-                  onClick={() => setPreviewImg(product.img)}
-                >
-                  <img src={`http://localhost:5000/images/${product.img}`} alt="" className="w-50" />
-                </div>
+                {gallery.map((img) => (
+                  <div
+                    className={`img__item mb-3 ${previewImg === img ? "img__item-active" : ""}`}
+                    onClick={() => setPreviewImg(img)}
+                    key={img}
+                  >
+                    <img src={`${API_URL}/images/${img}`} alt={product.title} className="w-50" />
+                  </div>
+                ))}
               </div>
             </Col>
 
             <Col lg="4" md="4">
               <div className="product__main-img">
-                <img src={`http://localhost:5000/images/${previewImg}`} alt="" className="w-100" />
+                <img src={`${API_URL}/images/${previewImg}`} alt={product.title} className="w-100" />
               </div>
             </Col>
 
@@ -128,7 +188,7 @@ const FoodDetails = () => {
                   className={` ${tab === "rev" ? "tab__active" : ""}`}
                   onClick={() => setTab("rev")}
                 >
-                  Review
+                  Review ({reviews.length})
                 </h6>
               </div>
 
@@ -138,28 +198,23 @@ const FoodDetails = () => {
                 </div>
               ) : (
                 <div className="tab__form mb-3">
-                  <div className="review pt-5">
-                    <p className="user__name mb-0">Jhon Doe</p>
-                    <p className="user__email">jhon1@gmail.com</p>
-                    <p className="feedback__text">great product</p>
-                  </div>
-
-                  <div className="review">
-                    <p className="user__name mb-0">Jhon Doe</p>
-                    <p className="user__email">jhon1@gmail.com</p>
-                    <p className="feedback__text">great product</p>
-                  </div>
-
-                  <div className="review">
-                    <p className="user__name mb-0">Jhon Doe</p>
-                    <p className="user__email">jhon1@gmail.com</p>
-                    <p className="feedback__text">great product</p>
-                  </div>
+                  {reviews.length === 0 ? (
+                    <p className="pt-5">No reviews yet — be the first to write one.</p>
+                  ) : (
+                    reviews.map((review) => (
+                      <div className="review pt-3" key={review._id}>
+                        <p className="user__name mb-0">{review.name}</p>
+                        <p className="user__email">{review.email}</p>
+                        <p className="feedback__text">{review.message}</p>
+                      </div>
+                    ))
+                  )}
                   <form className="form" onSubmit={submitHandler}>
                     <div className="form__group">
                       <input
                         type="text"
                         placeholder="Enter your name"
+                        value={enteredName}
                         onChange={(e) => setEnteredName(e.target.value)}
                         required
                       />
@@ -167,8 +222,9 @@ const FoodDetails = () => {
 
                     <div className="form__group">
                       <input
-                        type="text"
+                        type="email"
                         placeholder="Enter your email"
+                        value={enteredEmail}
                         onChange={(e) => setEnteredEmail(e.target.value)}
                         required
                       />
@@ -177,15 +233,15 @@ const FoodDetails = () => {
                     <div className="form__group">
                       <textarea
                         rows={5}
-                        type="text"
                         placeholder="Write your review"
+                        value={reviewMsg}
                         onChange={(e) => setReviewMsg(e.target.value)}
                         required
                       />
                     </div>
 
-                    <button type="submit" className="addTOCart__btn">
-                      Submit
+                    <button type="submit" className="addTOCart__btn" disabled={submittingReview}>
+                      {submittingReview ? "Submitting..." : "Submit"}
                     </button>
                   </form>
                 </div>

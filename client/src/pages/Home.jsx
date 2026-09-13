@@ -27,6 +27,7 @@ import networkImg from "../assets/images/network.png";
 
 import TestimonialSlider from "../components/UI/slider/TestimonialSlider.jsx";
 import HeroSlider from "../components/UI/slider/HeroSlider.jsx";
+import { API_URL } from "../config/api";
 
 const featureData = [
   {
@@ -55,7 +56,7 @@ const Home = () => {
   useEffect(() => {
     const fetchFoodType = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/product/`);
+        const res = await fetch(`${API_URL}/product/`);
         const data = await res.json();
         if (data && Array.isArray(data)) { // Ensure data is an array
           setFilteredFoods(data);
@@ -70,15 +71,11 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    let filteredProducts = [];
-    if (category === "PIZZA") {
-      filteredProducts = products.filter((item) => item.category === "Pizza");
-    } else if (category === "BREAD") {
-      filteredProducts = products.filter((item) => item.category === "Bread");
-    } else {
-      // Default to "BURGER" if category is unset or explicitly "BURGER"
-      filteredProducts = products.filter((item) => item.category === "Burger");
-    }
+    // compare case-insensitively, or a product with mismatched casing (e.g. "pizza" vs "Pizza") silently vanishes from every tab
+    const wantedCategory = category === "PIZZA" ? "pizza" : category === "BREAD" ? "bread" : "burger";
+    const filteredProducts = products.filter(
+      (item) => (item.category || "").toLowerCase() === wantedCategory
+    );
     setAllProducts(filteredProducts);
   }, [category, products]);
   
@@ -103,7 +100,7 @@ const Home = () => {
 
                 <div className="hero__btns d-flex align-items-center gap-5 mt-4">
                   <button className="order__btn d-flex align-items-center justify-content-between">
-                    Order now <i class="ri-arrow-right-s-line"></i>
+                    Order now <i className="ri-arrow-right-s-line"></i>
                   </button>
 
                   <button className="all__foods-btn">
@@ -114,14 +111,14 @@ const Home = () => {
                 <div className=" hero__service  d-flex align-items-center gap-5 mt-5 ">
                   <p className=" d-flex align-items-center gap-2 ">
                     <span className="shipping__icon">
-                      <i class="ri-car-line"></i>
+                      <i className="ri-car-line"></i>
                     </span>{" "}
                     No shipping charge
                   </p>
 
                   <p className=" d-flex align-items-center gap-2 ">
                     <span className="shipping__icon">
-                      <i class="ri-shield-check-line"></i>
+                      <i className="ri-shield-check-line"></i>
                     </span>{" "}
                     100% secure checkout
                   </p>
@@ -220,7 +217,7 @@ const Home = () => {
             </Col>
 
             {allProducts.map((item) => (
-              <Col lg="3" md="4" sm="6" xs="6" key={item.id} className="mt-5">
+              <Col lg="3" md="4" sm="6" xs="6" key={item._id} className="mt-5">
                 <ProductCard item={item} />
               </Col>
             ))}
@@ -250,7 +247,7 @@ const Home = () => {
                 <ListGroup className="mt-4">
                   <ListGroupItem className="border-0 ps-0">
                     <p className=" choose__us-title d-flex align-items-center gap-2 ">
-                      <i class="ri-checkbox-circle-line"></i> Fresh and tasty
+                      <i className="ri-checkbox-circle-line"></i> Fresh and tasty
                       foods
                     </p>
                     <p className="choose__us-desc">
@@ -261,7 +258,7 @@ const Home = () => {
 
                   <ListGroupItem className="border-0 ps-0">
                     <p className="choose__us-title d-flex align-items-center gap-2 ">
-                      <i class="ri-checkbox-circle-line"></i> Quality support
+                      <i className="ri-checkbox-circle-line"></i> Quality support
                     </p>
                     <p className="choose__us-desc">
                       Lorem ipsum dolor sit amet consectetur adipisicing elit.
@@ -271,7 +268,7 @@ const Home = () => {
 
                   <ListGroupItem className="border-0 ps-0">
                     <p className="choose__us-title d-flex align-items-center gap-2 ">
-                      <i class="ri-checkbox-circle-line"></i>Order from any
+                      <i className="ri-checkbox-circle-line"></i>Order from any
                       location{" "}
                     </p>
                     <p className="choose__us-desc">

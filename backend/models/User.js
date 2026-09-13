@@ -10,12 +10,14 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
     },
     password: {
         type: String,
         required: true,
-        min: 6,
-        max: 50,
+        // minlength/maxlength (not min/max, which are numeric-only) - this checks the hashed value, so real length validation happens pre-hash in the controller
+        minlength: 6,
+        maxlength: 200,
     },
     isAdmin: {
         type: Boolean,

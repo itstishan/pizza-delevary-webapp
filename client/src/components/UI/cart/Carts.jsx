@@ -14,6 +14,7 @@ const Carts = () => {
   // Ensure cartProducts is an array even if the state is undefined
   const cartProducts = useSelector((state) => state.cart.cartItems) || [];
   const totalAmount = useSelector((state) => state.cart.totalAmount);
+  const isEmpty = cartProducts.length === 0;
 
   const toggleCart = () => {
     dispatch(cartUiActions.toggle());
@@ -24,31 +25,32 @@ const Carts = () => {
       <ListGroup className="cart">
         <div className="cart__close">
           <span onClick={toggleCart}>
-            {/* Adjusted class to className */}
             <i className="ri-close-fill"></i>
           </span>
         </div>
 
         <div className="cart__item-list">
-          {cartProducts.length === 0 ? (
+          {isEmpty ? (
             <h6 className="text-center mt-5">No item added to the cart</h6>
           ) : (
-            cartProducts.map((item, index) => (
-              <CartItem item={item} key={index} />
+            cartProducts.map((item) => (
+              <CartItem item={item} key={item.id} />
             ))
           )}
         </div>
 
-        <div className="cart__bottom d-flex align-items-center justify-content-between">
-          <h6>
-            Subtotal : <span>${totalAmount}</span>
-          </h6>
-          <button>
-            <Link to="/checkout" onClick={toggleCart}>
-              Checkout
-            </Link>
-          </button>
-        </div>
+        {!isEmpty && (
+          <div className="cart__bottom d-flex align-items-center justify-content-between">
+            <h6>
+              Subtotal : <span>${totalAmount}</span>
+            </h6>
+            <button>
+              <Link to="/checkout" onClick={toggleCart}>
+                Checkout
+              </Link>
+            </button>
+          </div>
+        )}
       </ListGroup>
     </div>
   );

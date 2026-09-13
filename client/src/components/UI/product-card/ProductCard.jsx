@@ -3,6 +3,7 @@ import "../../../styles/product-card.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { cartActions } from "../../../store/shopping-cart/cartSlice";
+import { API_URL } from "../../../config/api";
 
 const ProductCard = (props) => {
   const { _id, title, img, price } = props.item;
@@ -10,14 +11,14 @@ const ProductCard = (props) => {
   const navigate = useNavigate();
 
   const user = useSelector((state) => state.auth.user);
-  console.log(user)
-  //const isLogAdmin = user !== null && user.isAdmin === true;
-   const isLogAdmin = false;
+  const token = useSelector((state) => state.auth.token);
+  const isLogAdmin = user !== null && user !== undefined && user.isAdmin === true;
 
   const addToCart = () => {
     dispatch(
       cartActions.addItem({
-        _id,
+        // cartSlice keys items by `id` - sending `_id` here used to leave every item's id undefined and merge all products into one
+        id: _id,
         title,
         img,
         price,
@@ -30,28 +31,34 @@ const ProductCard = (props) => {
   }
 
   const handleDelete = () => {
-    fetch(`http://localhost:5000/product/delete/${_id}`, {
+    if (!window.confirm("Delete this product?")) return;
+
+    fetch(`${API_URL}/product/delete/${_id}`, {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.msg === "Product deleted successfully") {
           alert("Product deleted successfully");
-          navigate(`/home`); // Move navigate inside this block
-          // You can handle product removal from your UI or state here
+          navigate(`/home`);
         } else {
           console.error("Failed to delete product:", data.msg);
+          alert("Failed to delete product: " + data.msg);
         }
       })
       .catch((error) => {
         console.error("Failed to delete product", error);
+        alert("Failed to delete product");
       });
   };
-  
+
   return (
     <div className="product__item">
       <div className="product__img">
-        <img src={`http://localhost:5000/images/${img}`} alt="product-img" className="w-50" />
+        <img src={`${API_URL}/images/${img}`} alt={title} className="w-50" />
       </div>
 
       <div className="product__content">
@@ -77,7 +84,7 @@ const ProductCard = (props) => {
                 </button>
               </div>
               </div>
-              
+
             </div>
           ) : (
             <div className="d-flex align-items-center justify-content-between">

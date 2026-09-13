@@ -17,6 +17,11 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    // optional extra gallery images shown on the details page, beyond the primary `img` cover image
+    images: {
+        type: [String],
+        default: [],
+    },
     category: {
         type: String,
         required: true,

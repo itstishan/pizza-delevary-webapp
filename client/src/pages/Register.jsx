@@ -5,19 +5,23 @@ import { Container, Row, Col } from "reactstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { authAction } from '../store/author/authSlice'
 import { useDispatch } from 'react-redux'
+import { API_URL } from '../config/api'
 
 const Register = () => {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState(false)
+  const [error, setError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
   const handleSignup = async(e) => {
     e.preventDefault()
+    setError("")
+    setSubmitting(true)
     try {
-      const res = await fetch(`http://localhost:5000/auth/register`, {
+      const res = await fetch(`${API_URL}/auth/register`, {
         headers: {
           "Content-Type": 'application/json'
         },
@@ -26,20 +30,20 @@ const Register = () => {
       })
 
       const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.msg || "Registration failed")
+      }
+
       dispatch(authAction.register(data))
       navigate('/')
-      
+
     } catch (error) {
-      setError(true)
-      setTimeout(() => {
-        setError(false)
-      }, 3000)
+      setError(error.message || "Something went wrong. Please try again.")
+    } finally {
+      setSubmitting(false)
     }
   }
-
-  const submitHandler = (e) => {
-    e.preventDefault();
-  };
 
   return (
     <Helmet title="Signup">
@@ -49,6 +53,7 @@ const Register = () => {
           <Row>
             <Col lg="6" md="6" sm="12" className="m-auto text-center">
               <form className="form mb-5" onSubmit={handleSignup}>
+                {error && <p className="text-danger">{error}</p>}
               <div className="form__group">
                   <input
                     type="text"
@@ -70,11 +75,12 @@ const Register = () => {
                     type="password"
                     placeholder="Password"
                     required
+                    minLength={6}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <button type="submit" className="addTOCart__btn">
-                  Sign Up
+                <button type="submit" className="addTOCart__btn" disabled={submitting}>
+                  {submitting ? "Signing up..." : "Sign Up"}
                 </button>
               </form>
               <Link to="/login">Already have an account? Login</Link>

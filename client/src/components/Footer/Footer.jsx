@@ -4,8 +4,6 @@ import logo from "../../assets/images/logo.png";
 
 import "../../styles/footer.css";
 
-import { Link } from "react-router-dom";
-
 const Footer = () => {
   return (
     <footer className="footer">
@@ -40,10 +38,10 @@ const Footer = () => {
             <h5 className="footer__title">Contact</h5>
             <ListGroup className="deliver__time-list">
               <ListGroupItem className=" delivery__time-item border-0 ps-0">
-                <p>Location: ZindaBazar, Sylhet-3100, Bangladesh</p>
+                <p>Location: 14 Ward Place, Colombo 07, Sri Lanka</p>
               </ListGroupItem>
               <ListGroupItem className=" delivery__time-item border-0 ps-0">
-                <span>Phone: 01122334455</span>
+                <span>Phone: +94 76 123 4567</span>
               </ListGroupItem>
 
               <ListGroupItem className=" delivery__time-item border-0 ps-0">
@@ -58,7 +56,7 @@ const Footer = () => {
             <div className="newsletter">
               <input type="email" placeholder="Enter your email" />
               <span>
-                <i class="ri-send-plane-line"></i>
+                <i className="ri-send-plane-line"></i>
               </span>
             </div>
           </Col>
@@ -76,29 +74,33 @@ const Footer = () => {
               <p className="m-0">Follow: </p>
               <span>
                 {" "}
-                <Link to="https://www.facebook.com/muhib160">
-                  <i class="ri-facebook-line"></i>
-                </Link>{" "}
+                {/* react-router's <Link> treats an external URL as an
+                    in-app path - it needs a plain <a> to actually leave
+                    the site, opened in a new tab so checkout/cart state
+                    isn't lost */}
+                <a href="https://www.facebook.com/muhib160" target="_blank" rel="noopener noreferrer">
+                  <i className="ri-facebook-line"></i>
+                </a>{" "}
               </span>
 
               <span>
-                <Link to="https://github.com/muhib160">
-                  <i class="ri-github-line"></i>
-                </Link>
+                <a href="https://github.com/muhib160" target="_blank" rel="noopener noreferrer">
+                  <i className="ri-github-line"></i>
+                </a>
               </span>
 
               <span>
                 {" "}
-                <Link to=" https://www.youtube.com/c/MuhibsTechDiary">
-                  <i class="ri-youtube-line"></i>
-                </Link>{" "}
+                <a href="https://www.youtube.com/c/MuhibsTechDiary" target="_blank" rel="noopener noreferrer">
+                  <i className="ri-youtube-line"></i>
+                </a>{" "}
               </span>
 
               <span>
                 {" "}
-                <Link to=" https://www.linkedin.com/in/muhib160/">
-                  <i class="ri-linkedin-line"></i>
-                </Link>{" "}
+                <a href="https://www.linkedin.com/in/muhib160/" target="_blank" rel="noopener noreferrer">
+                  <i className="ri-linkedin-line"></i>
+                </a>{" "}
               </span>
             </div>
           </Col>

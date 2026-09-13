@@ -90,6 +90,12 @@
 
 .img__item {
   cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 5px;
+}
+
+.img__item-active {
+  border-color: #df2020;
 }
 .related__Product-title {
   font-size: 1.4rem;
