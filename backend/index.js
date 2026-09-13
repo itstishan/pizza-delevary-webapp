@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors')
-const dotenv = require('dotenv').config()
+const dotenv = require('dotenv').config({ quiet: true }) // suppress dotenv's console startup tips
 const mongoose = require("mongoose")
 const authController = require('./controllers/authController')
 const productController = require('./controllers/productController')
