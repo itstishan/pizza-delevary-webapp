@@ -25,6 +25,9 @@ mongoose.connect(process.env.MONGODB_URL)
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
+
+app.get('/', (req, res) => res.send('Pizza Delivery API is up and running!'))
+
 app.use('/images', express.static('public/images'))
 app.use('/auth', authController)
 app.use('/product', productController)
